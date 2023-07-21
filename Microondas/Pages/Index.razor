@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using Microondas.Models
 
 <PageTitle>Index</PageTitle>
 
@@ -22,6 +23,19 @@
 <p >@resultado</p>
 <label>@processoAquecimento</label>
 
+<h3>Programas Pré-definidos</h3>
+@foreach (var programa in programasPreDefinidos)
+{
+    <div>
+        <p>Nome: @programa.Nome</p>
+        <p>Alimento: @programa.Alimento</p>
+        <p>Tempo: @programa.Tempo</p>
+        <p>Potencia: @programa.Potencia</p>
+        <p>Instruções:@programa.Instrucoes</p>
+        <button class="mb-3" @onclick="() => IniciarAquecimentoProgramaDefinido(programa.Tempo, programa.Potencia, programa.CaracterAquecimento)">Selecionar programa</button>
+    </div>    
+}
+
 
 @code{
 
@@ -35,10 +49,60 @@
     private bool aquecimentoExecucao = false;
     private bool aquecimentoEmPausa = false;
     private System.Timers.Timer temporizador = new System.Timers.Timer();
+    private List<ProgramaAquecimento> programasPreDefinidos;
 
     protected override void OnInitialized()
     {
         ConfiguracaoTemporizador();
+
+        programasPreDefinidos = new List<ProgramaAquecimento>
+        {
+            new ProgramaAquecimento
+            {
+                Nome = "Pipoca",
+                Alimento = "Pipoca (de micro-ondas)",
+                Tempo = 180,
+                Potencia = 7,
+                CaracterAquecimento = "#",
+                Instrucoes = "Observar o barulho de estouros do milho, caso houver um intervalo de mais de 10 segundos entre um estouro e outro, interrompa o aquecimento."                     
+            },
+            new ProgramaAquecimento
+            {
+                Nome = "Leite",
+                Alimento = "Leite",
+                Tempo = 300,
+                Potencia = 5,
+                CaracterAquecimento = "$",
+                Instrucoes = "Cuidado com aquecimento de líquidos, o choque térmico aliado ao movimento do recipiente pode causar fervura imediata causando risco de queimaduras."
+            },
+            new ProgramaAquecimento
+            {
+                Nome = "Carnes de boi",
+                Alimento = ": Carne em pedaço ou fatias",
+                Tempo = 840,
+                Potencia = 4,
+                CaracterAquecimento = "@",
+                Instrucoes = " Interrompa o processo na metade e vire o conteúdo com a parte de baixo para cima para o descongelamento uniforme."
+            },
+            new ProgramaAquecimento
+            {
+                Nome = "Frango",
+                Alimento = "Frango (qualquer corte)",
+                Tempo = 420,
+                Potencia = 7,
+                CaracterAquecimento = "%",
+                Instrucoes = " Interrompa o processo na metade e vire o conteúdo com a parte de baixo para cima para o descongelamento uniforme."
+            },
+            new ProgramaAquecimento
+            {
+                Nome = "Feijão",
+                Alimento = "Feijão congelado",
+                Tempo = 480,
+                Potencia = 9,
+                CaracterAquecimento = "*",
+                Instrucoes = "Deixe o recipiente destampado e em casos de plástico, cuidado ao retirar o recipiente pois o mesmo pode perder resistência em altas temperaturas."
+            }
+        };
     }
 
     public void IniciarAquecimento(int tempo, int potencia){
@@ -94,6 +158,30 @@
 
     }
 
+    public void IniciarAquecimentoProgramaDefinido(int tempo, int potencia, string caracterAquecimento){
+        string tempoFormatado;
+
+        tempoInformado = tempo;
+        potenciaInformado = potencia;
+
+        if(aquecimentoEmPausa){            
+            temporizador.Start();
+            aquecimentoEmPausa = false;
+            return;
+        }
+
+        tempoAquecimento = tempo;
+        potenciaAquecimento = potencia;
+
+        resultado = $"Iniciando aquecimento com {tempoAquecimento} segundos e potência {potenciaAquecimento}";
+        aquecimentoExecucao = true;
+
+        referenciaLabel = GerarStringLabel(potenciaAquecimento, caracterAquecimento);
+
+        temporizador.Start();
+
+    }
+
     private void DecrementarTempo()
     {
         if (tempoAquecimento > 0)
@@ -131,11 +219,11 @@
         temporizador.Start();
     }
 
-    private string GerarStringLabel(int potencia){
+    private string GerarStringLabel(int potencia, string caracter = "."){
         string label = "";
 
         for(int i = 0; i < potencia; i++){
-            label += ".";
+            label += caracter;
         }
 
         return label;
@@ -147,12 +235,15 @@
             resultado = "";
             processoAquecimento = "";
             aquecimentoExecucao = false;
+            aquecimentoEmPausa = false;
             StateHasChanged();
+            return;
         }
 
         if(aquecimentoExecucao == false){
             tempoInformado = 0;
             potenciaInformado = 0;
+            return;
         }
         
         temporizador.Stop();
