@@ -1,0 +1,174 @@
+﻿@page "/"
+
+<PageTitle>Index</PageTitle>
+
+<h3>Informe o Tempo e a Potência</h3>
+
+<div>
+    <label>Tempo (segundos):</label>
+    <input @bind="tempoInformado" type="number"/>
+</div>
+
+<div>
+    <label>Potência:</label>
+    <input @bind="potenciaInformado" type="number"/>
+</div>
+
+<div>
+    <button @onclick="() => IniciarAquecimento(tempoInformado, potenciaInformado)">Iniciar Aquecimento</button>
+    <button @onclick="PausaCancelamento">Pausa/Cancelamento</button>
+</div>
+
+<p >@resultado</p>
+<label>@processoAquecimento</label>
+
+
+@code{
+
+    private string resultado;
+    private string processoAquecimento;
+    private string referenciaLabel;
+    private int tempoInformado;
+    private int tempoAquecimento;
+    private int potenciaAquecimento;
+    private int potenciaInformado;
+    private bool aquecimentoExecucao = false;
+    private bool aquecimentoEmPausa = false;
+    private System.Timers.Timer temporizador = new System.Timers.Timer();
+
+    protected override void OnInitialized()
+    {
+        ConfiguracaoTemporizador();
+    }
+
+    public void IniciarAquecimento(int tempo, int potencia){
+        string tempoFormatado;
+
+        if(aquecimentoEmPausa){            
+            temporizador.Start();
+            aquecimentoEmPausa = false;
+            return;
+        }
+
+        if(aquecimentoExecucao){
+            tempoAquecimento += 30;
+            resultado = $"Iniciando aquecimento com {tempoAquecimento} segundos e potência {potenciaAquecimento}";
+            StateHasChanged();
+            return;
+        }
+        
+        if(tempo == 0 && potencia == 0){            
+            InicioRapido();
+            return;
+        }
+
+        if((tempo < 1 || tempo > 120)){
+            resultado = "Insira um tempo válido entre 1 segundo e 2 minutos";
+            return;
+        }
+
+        if((potencia < 1 || potencia > 10)){
+            resultado = "Insira uma potencia válida entre 1 e 10";
+            return;
+        }
+
+        if((tempo >= 60 && tempo < 100)){
+            int minutos = tempo / 60;
+            int segundos = tempo % 60;
+            string formatoMinutos = minutos.ToString("D2");
+            string formatoSegundos = segundos.ToString("D2");
+            tempoFormatado = $"{formatoMinutos}:{formatoSegundos}";
+        }else{
+            tempoFormatado = $"{tempo} segundos";
+        }
+
+        tempoAquecimento = tempo;
+        potenciaAquecimento = potencia;
+
+        resultado = $"Iniciando aquecimento com {tempoFormatado} e potência {potencia}";
+        aquecimentoExecucao = true;
+
+        referenciaLabel = GerarStringLabel(potenciaAquecimento);
+
+        temporizador.Start();   
+
+    }
+
+    private void DecrementarTempo()
+    {
+        if (tempoAquecimento > 0)
+        {
+            tempoAquecimento--;
+            processoAquecimento =  processoAquecimento + $" {referenciaLabel}";
+            StateHasChanged();
+        }
+        else
+        {
+            temporizador.Stop();
+            resultado = "Aquecimento concluído!";
+            processoAquecimento += " Aquecimento concluído!";
+            ResetarVariaveis();
+            aquecimentoExecucao = false;
+
+            StateHasChanged();
+            resultado = "";
+            processoAquecimento = "";
+            referenciaLabel = "";
+        }
+    }
+
+    private void InicioRapido(){          
+        string tempo = $"{30} segundos";
+        tempoAquecimento = 30;
+        string potencia = "10";
+        potenciaAquecimento = 10;
+        resultado = $"Iniciando aquecimento com {tempo} e potência {potencia}";
+        aquecimentoExecucao = true;
+
+        processoAquecimento = GerarStringLabel(potenciaAquecimento);
+        referenciaLabel = processoAquecimento;
+        
+        temporizador.Start();
+    }
+
+    private string GerarStringLabel(int potencia){
+        string label = "";
+
+        for(int i = 0; i < potencia; i++){
+            label += ".";
+        }
+
+        return label;
+    }
+
+    private void PausaCancelamento(){
+        if(aquecimentoEmPausa){
+            temporizador.Stop();
+            resultado = "";
+            processoAquecimento = "";
+            aquecimentoExecucao = false;
+            StateHasChanged();
+        }
+
+        if(aquecimentoExecucao == false){
+            tempoInformado = 0;
+            potenciaInformado = 0;
+        }
+        
+        temporizador.Stop();
+        aquecimentoEmPausa = true;
+    }
+
+    private void ResetarVariaveis(){
+        tempoAquecimento = 0;
+        processoAquecimento = "";
+        potenciaInformado = 0;
+        tempoInformado = 0;
+        resultado = "";
+    }
+
+    private void ConfiguracaoTemporizador(){
+        temporizador.Interval = 1000;
+        temporizador.Elapsed += (source, e) => DecrementarTempo();
+    }
+}
