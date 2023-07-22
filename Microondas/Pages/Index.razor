@@ -1,5 +1,8 @@
 ﻿@page "/"
-@using Microondas.Models
+@using Microondas.Models;
+@using Microondas.Services.Contratos;
+@using Microondas.Services;
+@inject IProgramaAquecimentoCustomizadoService programaAquecimentoService
 
 <PageTitle>Index</PageTitle>
 
@@ -36,6 +39,19 @@
     </div>    
 }
 
+<h3>Programas Cadastrados</h3>
+@foreach (var programa in programasDoBanco)
+{
+    <div>
+        <p>Nome: @programa.Nome</p>
+        <p>Alimento: @programa.Alimento</p>
+        <p>Tempo: @programa.Tempo</p>
+        <p>Potencia: @programa.Potencia</p>
+        <p>Instruções:@programa.Instrucoes</p>
+        <button class="mb-3" @onclick="() => IniciarAquecimentoProgramaDefinido(programa.Tempo, programa.Potencia, programa.CaracterAquecimento)">Selecionar programa</button>
+    </div>    
+}
+
 
 @code{
 
@@ -50,10 +66,13 @@
     private bool aquecimentoEmPausa = false;
     private System.Timers.Timer temporizador = new System.Timers.Timer();
     private List<ProgramaAquecimento> programasPreDefinidos;
+    private IEnumerable<ProgramaAquecimento> programasDoBanco;
 
-    protected override void OnInitialized()
+    protected async override void OnInitialized()
     {
         ConfiguracaoTemporizador();
+
+
 
         programasPreDefinidos = new List<ProgramaAquecimento>
         {
@@ -103,6 +122,8 @@
                 Instrucoes = "Deixe o recipiente destampado e em casos de plástico, cuidado ao retirar o recipiente pois o mesmo pode perder resistência em altas temperaturas."
             }
         };
+
+        programasDoBanco = await programaAquecimentoService.GetProgramasAquecimento();
     }
 
     public void IniciarAquecimento(int tempo, int potencia){

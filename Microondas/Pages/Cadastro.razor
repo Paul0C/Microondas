@@ -1,0 +1,45 @@
+@page "/cadastro"
+@using Microondas.Services.Contratos;
+@using Microondas.Services;
+@using Microondas.Models;
+@inject IProgramaAquecimentoCustomizadoService programaAquecimentoService
+
+<PageTitle>Cadastro</PageTitle>
+
+<EditForm Model="@programaAquecimento">
+    <div class="form-group">
+        <label for="nome">Nome:</label>
+        <InputText id="nome" @bind-Value="@programaAquecimento.Nome" />
+    </div>
+
+    <div class="form-group">
+        <label for="alimento">Alimento:</label>
+        <InputText id="alimento" @bind-Value="@programaAquecimento.Alimento" />
+    </div>
+
+    <div class="form-group">
+        <label for="potencia">Potência:</label>
+        <InputNumber id="potencia" @bind-Value="@programaAquecimento.Potencia" />
+    </div>
+
+    <div class="form-group">
+        <label for="stringAquecimento">Caractere de Aquecimento:</label>
+        <InputText id="stringAquecimento" @bind-Value="@programaAquecimento.CaracterAquecimento" />
+    </div>
+
+    <div class="form-group">
+        <label for="tempo">Tempo:</label>
+        <InputNumber id="tempo" @bind-Value="@programaAquecimento.Tempo" />
+    </div>
+
+    <div class="form-group">
+        <label for="instrucoes">Instruções:</label>
+        <InputText id="instrucoes" @bind-Value="@programaAquecimento.Instrucoes" />
+    </div>
+
+    <button type="submit" @onclick="() => programaAquecimentoService.AddProgramaCustomizado(programaAquecimento)">Salvar</button>
+</EditForm>
+
+@code{
+    private ProgramaAquecimento programaAquecimento = new ProgramaAquecimento();
+}
